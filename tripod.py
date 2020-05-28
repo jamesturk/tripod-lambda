@@ -13,6 +13,7 @@ import typing
 @attr.s(auto_attribs=True)
 class Function:
     name: str
+    description: str
     runtime: str
     role_arn: str
     handler: str
