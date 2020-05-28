@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "tripod"
+version = "0.1.0"
+description = "really lightweight scaffolding for lambda"
+authors = ["James Turk <dev@jamesturk.net>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+click = "^7.1.1"
+boto3 = "^1.13.18"
+pyyaml = "^5.3.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
