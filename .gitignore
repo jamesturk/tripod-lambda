@@ -1,2 +1,5 @@
 *.pyc
 tripod.yaml
+dist/
+pip-wheel-metadata/
+*.egg-info
