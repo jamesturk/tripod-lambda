@@ -22,6 +22,17 @@ class Function:
     environment: typing.Dict[str, str]
 
 
+def parse_environment_spec(value):
+    if isinstance(value, str):
+        return value
+    elif isinstance(value, dict):
+        if "paramstore" in value:
+            ssm = boto3.client("ssm")
+            resp = ssm.get_parameter(Name=value["paramstore"], WithDecryption=True)
+            return resp["Parameter"]["Value"]
+    raise ValueError(value)
+
+
 def create_psycopg2_layer():
     if not os.path.exists("awslambda-psycopg2"):
         subprocess.run(
@@ -100,7 +111,11 @@ def cli():
     with open(filename) as f:
         data = yaml.safe_load(f)
     for function in data["functions"]:
-        functions[function["name"]] = Function(**function)
+        env = function.pop("environment")
+        processed_env = {}
+        for k, v in env.items():
+            processed_env[k] = parse_environment_spec(v)
+        functions[function["name"]] = Function(**function, environment=processed_env)
 
 
 @cli.command()
