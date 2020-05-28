@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "tripod-lambda"
 version = "0.1.0"
+readme = "README.md"
 description = "really lightweight scaffolding for lambda"
 authors = ["James Turk <dev@jamesturk.net>"]
 license = "MIT"
@@ -13,7 +14,7 @@ pyyaml = "^5.3.1"
 attrs = "^19.3.0"
 
 [tool.poetry.scripts]
-tripod = 'tripod:cli'
+tripod = 'tripod_lambda:cli'
 
 [tool.poetry.dev-dependencies]
 
