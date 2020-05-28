@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "tripod"
+name = "tripod-lambda"
 version = "0.1.0"
 description = "really lightweight scaffolding for lambda"
 authors = ["James Turk <dev@jamesturk.net>"]
