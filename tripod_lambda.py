@@ -58,8 +58,10 @@ def create_psycopg2_layer():
 def do_publish(function):
     zipfilename = "upload.zip"
     with zipfile.ZipFile(zipfilename, "w") as zf:
-        for fn in function.files:
-            zf.write(fn)
+        for fileglob in function.files:
+            for fn in glob.glob(fileglob):
+                zf.write(fn)
+                click.echo(f"adding {fn}")
 
     client = boto3.client("lambda")
 
