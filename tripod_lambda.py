@@ -8,6 +8,7 @@ import click
 import yaml
 import attr
 import typing
+from pathlib import Path
 
 
 @attr.s(auto_attribs=True)
@@ -19,6 +20,7 @@ class Function:
     handler: str
     files: typing.List[str]
     layers: typing.List[str]
+    packages: typing.List[str]
     environment: typing.Dict[str, str]
 
 
@@ -55,14 +57,7 @@ def create_psycopg2_layer():
     )
 
 
-def do_publish(function):
-    zipfilename = "upload.zip"
-    with zipfile.ZipFile(zipfilename, "w") as zf:
-        for fileglob in function.files:
-            for fn in glob.glob(fileglob):
-                zf.write(fn)
-                click.echo(f"adding {fn}")
-
+def do_publish(function, zf):
     client = boto3.client("lambda")
 
     layer_arns = []
@@ -81,7 +76,7 @@ def do_publish(function):
             Runtime=function.runtime,
             Role=function.role_arn,
             Handler=function.handler,
-            Code={"ZipFile": open(zipfilename, "rb").read()},
+            Code={"ZipFile": open(zf, "rb").read()},
             Description=function.description,
             Environment={"Variables": function.environment},
             Publish=True,
@@ -91,7 +86,7 @@ def do_publish(function):
 
     if existing_config:
         client.update_function_code(
-            FunctionName=function.name, ZipFile=open(zipfilename, "rb").read()
+            FunctionName=function.name, ZipFile=open(zf, "rb").read()
         )
         client.update_function_configuration(
             FunctionName=function.name,
@@ -102,6 +97,29 @@ def do_publish(function):
         )
         client.publish_version(FunctionName=function.name)
         print(f"updated function {function.name}")
+
+
+def build_zip(function):
+    zipfilename = "upload.zip"
+    envdir = Path("tripod-packages")
+
+    # install packages to directory
+    for package in function.packages:
+        subprocess.run(
+            ["pip3", "install", "--no-deps", "--target", envdir, package], check=True,
+        )
+
+    with zipfile.ZipFile(zipfilename, "w") as zf:
+        for fileglob in function.files:
+            for fn in glob.glob(fileglob):
+                zf.write(fn)
+                click.echo(f"adding {fn}")
+        for fn in envdir.glob("**/*"):
+            arcname = str(fn).replace(str(envdir), "")
+            print(arcname)
+            zf.write(fn, arcname)
+
+    return zipfilename
 
 
 functions = {}
@@ -131,7 +149,8 @@ def list():
 @click.argument("function")
 def publish(function):
     click.echo(f"publishing {function}")
-    do_publish(functions[function])
+    zf = build_zip(functions[function])
+    do_publish(functions[function], zf)
 
 
 if __name__ == "__main__":
